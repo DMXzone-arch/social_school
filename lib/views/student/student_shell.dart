@@ -4,8 +4,6 @@ import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/responsive.dart';
 import '../../core/widgets/ui_kit.dart';
-import '../../repositories/auth_repository.dart';
-import '../../repositories/notification_repository.dart';
 import '../../viewmodels/chat_viewmodel.dart';
 import '../../viewmodels/feed_viewmodel.dart';
 import '../../viewmodels/library_viewmodel.dart';
@@ -13,10 +11,13 @@ import '../../viewmodels/opportunity_viewmodel.dart';
 import 'profile/notifications_view.dart';
 import 'profile/settings_view.dart';
 import 'home/feed_view.dart';
+import 'home/search_view.dart';
 import 'library/library_view.dart';
 import 'chats/chats_view.dart';
 import 'opportunities/opportunities_view.dart';
 import 'profile/profile_view.dart';
+import 'shell/sidebar.dart';
+import 'shell/top_bar_actions.dart';
 
 /// Student application shell.
 ///
@@ -70,10 +71,18 @@ class _StudentShellState extends State<StudentShell> {
           return Scaffold(
             appBar: AppBar(
               titleSpacing: 12,
-              title: const AppLogo(size: 30, showText: true),
+              title: const Text(
+                'Social School',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+              ),
               actions: [
-                _NotificationsButton(onOpen: () => _push(const NotificationsView())),
-                _ProfileMenu(goTo: _goTo),
+                IconButton(
+                  tooltip: 'Search',
+                  onPressed: () => _push(FeedSearchView(viewModel: widget.feedViewModel)),
+                  icon: const Icon(Icons.search_rounded),
+                ),
+                NotificationsButton(onOpen: () => _push(const NotificationsView())),
+                ProfileMenu(goTo: _goTo),
                 const SizedBox(width: 8),
               ],
             ),
@@ -97,7 +106,7 @@ class _StudentShellState extends State<StudentShell> {
         return Scaffold(
           body: Row(
             children: [
-              _Sidebar(index: _index, onSelect: _goTo),
+              StudentSidebar(index: _index, onSelect: _goTo),
               Expanded(
                 child: Column(
                   children: [
@@ -124,105 +133,8 @@ class _StudentShellState extends State<StudentShell> {
   }
 }
 
-class _Sidebar extends StatelessWidget {
-  const _Sidebar({required this.index, required this.onSelect});
-
-  final int index;
-  final ValueChanged<int> onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    const destinations = [
-      (Icons.home_outlined, Icons.home_rounded, 'Home'),
-      (Icons.menu_book_outlined, Icons.menu_book_rounded, 'Library'),
-      (Icons.chat_bubble_outline_rounded, Icons.chat_bubble_rounded, 'Chats'),
-      (Icons.school_outlined, Icons.school_rounded, 'Explore'),
-      (Icons.person_outline_rounded, Icons.person_rounded, 'Profile'),
-    ];
-
-    return Container(
-      width: 236,
-      decoration: const BoxDecoration(
-        color: AppColors.white,
-        border: Border(right: BorderSide(color: AppColors.border)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Padding(
-            padding: EdgeInsets.all(16),
-            child: AppLogo(size: 38),
-          ),
-          const Divider(height: 1, color: AppColors.border),
-          const SizedBox(height: 8),
-          for (var i = 0; i < destinations.length; i++)
-            _SidebarItem(
-              icon: destinations[i].$1,
-              activeIcon: destinations[i].$2,
-              label: destinations[i].$3,
-              selected: index == i,
-              onTap: () => onSelect(i),
-            ),
-          const Spacer(),
-          const Padding(
-            padding: EdgeInsets.all(14),
-            child: DemoBadge(label: 'PROTOTYPE'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SidebarItem extends StatelessWidget {
-  const _SidebarItem({
-    required this.icon,
-    required this.activeIcon,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final IconData activeIcon;
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-      child: Material(
-        color: selected ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-            child: Row(
-              children: [
-                Icon(selected ? activeIcon : icon,
-                    size: 21, color: selected ? AppColors.primary : AppColors.textSecondary),
-                const SizedBox(width: 12),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                    color: selected ? AppColors.primary : AppColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
+/// Tablet/desktop top bar: page title, resource search, notifications bell
+/// and the profile menu.
 class _TopBar extends StatelessWidget {
   const _TopBar({required this.title, required this.onSearch});
 
@@ -234,8 +146,8 @@ class _TopBar extends StatelessWidget {
     return Container(
       height: 64,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: const BoxDecoration(
-        color: AppColors.white,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
         border: Border(bottom: BorderSide(color: AppColors.border)),
       ),
       child: Row(
@@ -256,103 +168,14 @@ class _TopBar extends StatelessWidget {
               ),
             ),
           ),
-          _NotificationsButton(onOpen: () {
+          NotificationsButton(onOpen: () {
             Navigator.of(context).push(MaterialPageRoute(builder: (_) => const NotificationsView()));
           }),
           const SizedBox(width: 4),
-          _ProfileMenu(goTo: null),
+          ProfileMenu(goTo: null),
           const SizedBox(width: 8),
         ],
       ),
-    );
-  }
-}
-
-class _NotificationsButton extends StatelessWidget {
-  const _NotificationsButton({required this.onOpen});
-
-  final VoidCallback onOpen;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: NotificationRepository.instance,
-      builder: (context, _) {
-        final unread = NotificationRepository.instance.unreadCount;
-        return Stack(
-          alignment: Alignment.center,
-          children: [
-            IconButton(
-              tooltip: 'Notifications',
-              onPressed: onOpen,
-              icon: const Icon(Icons.notifications_outlined),
-            ),
-            if (unread > 0)
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(color: AppColors.error, shape: BoxShape.circle),
-                  child: Text('$unread',
-                      style: const TextStyle(fontSize: 8, color: Colors.white, fontWeight: FontWeight.w700)),
-                ),
-              ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _ProfileMenu extends StatelessWidget {
-  const _ProfileMenu({required this.goTo});
-
-  /// When provided, switches tabs locally; otherwise pops to the shell.
-  final void Function(int index)? goTo;
-
-  @override
-  Widget build(BuildContext context) {
-    final me = AuthRepository.instance.currentUser;
-
-    return PopupMenuButton<String>(
-      tooltip: 'Account menu',
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      onSelected: (value) {
-        switch (value) {
-          case 'profile':
-            if (goTo != null) {
-              goTo!(4);
-            } else {
-              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProfileView()));
-            }
-          case 'settings':
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsView()));
-          case 'signout':
-            AuthRepository.instance.signOut();
-        }
-      },
-      itemBuilder: (_) => [
-        PopupMenuItem(
-          enabled: false,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(me?.fullName ?? 'Student',
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-              Text(me?.institution.isEmpty ?? true ? 'Student' : me!.institution,
-                  style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-              if (me?.email != null && me!.email.isNotEmpty) ...[
-                Text(me.email, style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
-              ],
-            ],
-          ),
-        ),
-        const PopupMenuItem(value: 'profile', child: Text('My profile')),
-        const PopupMenuItem(value: 'settings', child: Text('Settings')),
-        const PopupMenuItem(value: 'signout', child: Text('Sign out')),
-      ],
-      icon: AvatarCircle(name: me?.fullName ?? 'Student', radius: 16),
     );
   }
 }

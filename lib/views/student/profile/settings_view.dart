@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/theme_controller.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
 import '../../../core/widgets/ui_kit.dart';
@@ -9,6 +10,7 @@ import '../../../repositories/auth_repository.dart';
 import '../../../repositories/chat_repository.dart';
 import '../../../models/conversation.dart';
 import 'edit_profile_view.dart';
+import 'widgets/settings_tiles.dart';
 
 /// Student settings — every action here is simulated in the prototype.
 class SettingsView extends StatelessWidget {
@@ -21,7 +23,11 @@ class SettingsView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: ListenableBuilder(
-        listenable: Listenable.merge([auth, ChatRepository.instance]),
+        listenable: Listenable.merge([
+          auth,
+          ChatRepository.instance,
+          ThemeController.instance,
+        ]),
         builder: (context, _) {
           final me = auth.currentUser;
           final blocked = ChatRepository.instance.blocked;
@@ -30,8 +36,8 @@ class SettingsView extends StatelessWidget {
             maxWidth: 680,
             child: ListView(
               children: [
-                _Section(title: 'Account', children: [
-                  _ActionTile(
+                SettingsSection(title: 'Account', children: [
+                  SettingsActionTile(
                     icon: Icons.edit_outlined,
                     title: 'Edit profile',
                     subtitle: 'Name, institution, interests and avatar',
@@ -39,7 +45,7 @@ class SettingsView extends StatelessWidget {
                       MaterialPageRoute(builder: (_) => const EditProfileView()),
                     ),
                   ),
-                  _ActionTile(
+                  SettingsActionTile(
                     icon: Icons.lock_outline_rounded,
                     title: 'Change password',
                     subtitle: 'Update your password',
@@ -50,17 +56,27 @@ class SettingsView extends StatelessWidget {
                           'Your password will be updated securely.',
                     ),
                   ),
-                  _SwitchTile(
+                  SettingsSwitchTile(
                     icon: Icons.visibility_outlined,
                     title: 'Profile visibility',
-                    subtitle: 'Let other students find your profile',
+                    subtitle: 'Let other members find your profile',
                     value: me?.profileVisible ?? true,
                     onChanged: auth.setProfileVisibility,
                   ),
                 ]),
-                _Section(title: 'Notifications', children: [
+                SettingsSection(title: 'Appearance', children: [
+                  SettingsSwitchTile(
+                    icon: Icons.dark_mode_outlined,
+                    title: 'Dark mode',
+                    subtitle: 'Easier on the eyes in low light',
+                    value: ThemeController.instance
+                        .isDarkFor(ThemeController.platformBrightness),
+                    onChanged: ThemeController.instance.setDark,
+                  ),
+                ]),
+                SettingsSection(title: 'Notifications', children: [
                   for (final entry in auth.notificationPrefs.entries.toList())
-                    _SwitchTile(
+                    SettingsSwitchTile(
                       icon: Icons.notifications_none_rounded,
                       title: entry.key,
                       subtitle: 'Push and email notifications',
@@ -68,8 +84,8 @@ class SettingsView extends StatelessWidget {
                       onChanged: (v) => auth.setNotificationPref(entry.key, v),
                     ),
                 ]),
-                _Section(title: 'Privacy & safety', children: [
-                  _ActionTile(
+                SettingsSection(title: 'Privacy & safety', children: [
+                  SettingsActionTile(
                     icon: Icons.block_outlined,
                     title: 'Blocked users',
                     subtitle: blocked.isEmpty
@@ -77,7 +93,7 @@ class SettingsView extends StatelessWidget {
                         : '${blocked.length} blocked',
                     onTap: () => _showBlockedDialog(context, blocked),
                   ),
-                  _ActionTile(
+                  SettingsActionTile(
                     icon: Icons.description_outlined,
                     title: 'Terms of Use',
                     onTap: () => _demoDialog(
@@ -87,7 +103,7 @@ class SettingsView extends StatelessWidget {
                           'By using the app you agree to these terms.',
                     ),
                   ),
-                  _ActionTile(
+                  SettingsActionTile(
                     icon: Icons.privacy_tip_outlined,
                     title: 'Privacy Policy',
                     onTap: () => _demoDialog(
@@ -98,8 +114,8 @@ class SettingsView extends StatelessWidget {
                     ),
                   ),
                 ]),
-                _Section(title: 'Support', children: [
-                  _ActionTile(
+                SettingsSection(title: 'Support', children: [
+                  SettingsActionTile(
                     icon: Icons.help_outline_rounded,
                     title: 'Help and support',
                     subtitle: 'FAQ and contact',
@@ -111,8 +127,8 @@ class SettingsView extends StatelessWidget {
                     ),
                   ),
                 ]),
-                _Section(title: 'Danger zone', children: [
-                  _ActionTile(
+                SettingsSection(title: 'Danger zone', children: [
+                  SettingsActionTile(
                     icon: Icons.delete_forever_outlined,
                     title: 'Delete account',
                     subtitle: 'Delete your account and data',
@@ -130,7 +146,7 @@ class SettingsView extends StatelessWidget {
                       }
                     },
                   ),
-                  _ActionTile(
+                  SettingsActionTile(
                     icon: Icons.logout_rounded,
                     title: 'Sign out',
                     danger: true,
@@ -146,7 +162,7 @@ class SettingsView extends StatelessWidget {
                     },
                   ),
                 ]),
-                const Padding(
+                Padding(
                   padding: EdgeInsets.all(16),
                   child: Center(
                     child: Text(
@@ -214,90 +230,6 @@ class SettingsView extends StatelessWidget {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
         ],
       ),
-    );
-  }
-}
-
-class _Section extends StatelessWidget {
-  const _Section({required this.title, required this.children});
-
-  final String title;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(4, 14, 0, 8),
-          child: Text(title,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.textSecondary)),
-        ),
-        SSCard(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-          child: Column(children: children),
-        ),
-      ],
-    );
-  }
-}
-
-class _ActionTile extends StatelessWidget {
-  const _ActionTile({
-    required this.icon,
-    required this.title,
-    required this.onTap,
-    this.subtitle,
-    this.danger = false,
-  });
-
-  final IconData icon;
-  final String title;
-  final String? subtitle;
-  final VoidCallback onTap;
-  final bool danger;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = danger ? AppColors.error : AppColors.textPrimary;
-    return ListTile(
-      onTap: onTap,
-      leading: Icon(icon, size: 20, color: danger ? AppColors.error : AppColors.textSecondary),
-      title: Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: color)),
-      subtitle: subtitle == null
-          ? null
-          : Text(subtitle!, style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
-      trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary, size: 20),
-    );
-  }
-}
-
-class _SwitchTile extends StatelessWidget {
-  const _SwitchTile({
-    required this.icon,
-    required this.title,
-    required this.value,
-    required this.onChanged,
-    this.subtitle,
-  });
-
-  final IconData icon;
-  final String title;
-  final String? subtitle;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return SwitchListTile(
-      value: value,
-      onChanged: onChanged,
-      secondary: Icon(icon, size: 20, color: AppColors.textSecondary),
-      title: Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-      subtitle: subtitle == null
-          ? null
-          : Text(subtitle!, style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
     );
   }
 }

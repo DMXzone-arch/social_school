@@ -25,22 +25,8 @@ class Report {
   String notes;
 }
 
-/// A simulated administrator action for the audit log.
-class AuditEntry {
-  AuditEntry({
-    required this.id,
-    required this.adminName,
-    required this.action,
-    required this.timestamp,
-  });
-
-  final String id;
-  final String adminName;
-  final String action;
-  final DateTime timestamp;
-}
-
-/// Fictional demo student account used in admin user management.
+/// Fictional demo student account, used to offer conversation requests in
+/// the student chats.
 class DemoStudentAccount {
   DemoStudentAccount({
     required this.id,
@@ -49,7 +35,6 @@ class DemoStudentAccount {
     required this.level,
     required this.institution,
     required this.registered,
-    this.status = AccountStatus.active,
   });
 
   final String id;
@@ -58,7 +43,6 @@ class DemoStudentAccount {
   final EducationLevel level;
   final String institution;
   final DateTime registered;
-  AccountStatus status;
 }
 
 /// A mock institution entry.

@@ -75,7 +75,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
                   ),
                   Text('${post.comments.length}',
-                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
                   IconButton(
                     tooltip: 'Close',
                     onPressed: () => Navigator.pop(context),
@@ -84,7 +84,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
                 ],
               ),
             ),
-            const Divider(height: 1, color: AppColors.border),
+            Divider(height: 1, color: AppColors.border),
             Expanded(
               child: post.comments.isEmpty
                   ? const EmptyState(
@@ -117,7 +117,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
                                                 fontWeight: FontWeight.w700, fontSize: 13)),
                                         const SizedBox(width: 8),
                                         Text(timeAgo(comment.timestamp),
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                                 fontSize: 11, color: AppColors.textSecondary)),
                                       ],
                                     ),
@@ -134,8 +134,8 @@ class _CommentsSheetState extends State<_CommentsSheet> {
             ),
             Container(
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-              decoration: const BoxDecoration(
-                color: AppColors.white,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
                 border: Border(top: BorderSide(color: AppColors.border)),
               ),
               child: Row(
@@ -145,7 +145,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
                       controller: _controller,
                       textInputAction: TextInputAction.send,
                       onSubmitted: (_) => _send(),
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         hintText: 'Add a comment…',
                         isDense: true,
                         filled: true,

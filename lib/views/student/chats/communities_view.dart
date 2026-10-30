@@ -35,8 +35,8 @@ class _CommunitiesViewState extends State<CommunitiesView> {
             maxWidth: 980,
             child: ListView(
               children: [
-                const Text(
-                  'Communities bring students together around a subject or cause. '
+                Text(
+                  'Communities bring members together around a subject or cause. '
                   'Joining unlocks the community feed and group chat.',
                   style: TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.5),
                 ),

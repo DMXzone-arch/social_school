@@ -14,7 +14,6 @@ void main() {
     expect(MockData.communities.length, greaterThanOrEqualTo(7));
     expect(MockData.opportunities.length, greaterThanOrEqualTo(8));
     expect(MockData.reports.length, greaterThanOrEqualTo(5));
-    expect(MockData.auditLog.length, greaterThanOrEqualTo(8));
   });
 
   test('Only approved resources are visible to students by default', () {

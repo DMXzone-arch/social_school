@@ -4,10 +4,10 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/forms.dart';
 import '../../../../core/widgets/ui_kit.dart';
 import '../../../../models/enums.dart';
-import '../../../../repositories/admin_repository.dart';
+import '../../../../repositories/report_repository.dart';
 
-/// Bridges feature widgets to the admin moderation layer without importing
-/// the whole admin repository into every call site.
+/// Bridges feature widgets to the report repository without importing it
+/// into every call site.
 class AdminReportSink {
   AdminReportSink._();
 
@@ -19,12 +19,12 @@ class AdminReportSink {
     required String targetTitle,
     required ModerationReason reason,
   }) {
-    AdminRepository.instance.createReport(
+    ReportRepository.instance.createReport(
       target: target,
       targetId: targetId,
       targetTitle: targetTitle,
       reason: reason,
-      reporter: 'Demo Student',
+      reporter: 'Member',
     );
   }
 }
@@ -75,7 +75,7 @@ Future<void> showReportDialog(
                 maxLines: 3,
               ),
               const SizedBox(height: 6),
-              const Text(
+              Text(
                 'Reports are reviewed by a moderator. We will follow up if '
                 'action is needed.',
                 style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
@@ -86,7 +86,7 @@ Future<void> showReportDialog(
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+            child: Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),

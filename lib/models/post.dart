@@ -27,12 +27,16 @@ class Post {
     required this.timestamp,
     this.title,
     this.hasImage = false,
+    this.backgroundId,
+    List<String>? taggedNames,
+    this.location,
     this.likedByMe = false,
     this.likeCount = 0,
     List<Comment>? comments,
     this.removedByAdmin = false,
     this.reportedByMe = false,
-  })  : comments = comments ?? <Comment>[];
+  })  : taggedNames = taggedNames ?? <String>[],
+        comments = comments ?? <Comment>[];
 
   final String id;
 
@@ -50,6 +54,15 @@ class Post {
   /// True when the composer attached a simulated local image.
   final bool hasImage;
 
+  /// Facebook-style colour background chosen in the composer (`null` = plain).
+  String? backgroundId;
+
+  /// People tagged in the post ("with …").
+  List<String> taggedNames;
+
+  /// Check-in style location shown under the author's name.
+  String? location;
+
   bool likedByMe;
   int likeCount;
   final List<Comment> comments;
@@ -58,4 +71,22 @@ class Post {
   bool reportedByMe;
 
   bool get isAnnouncement => type != PostType.studentPost;
+}
+
+/// Everything the composer can produce — used to create a post or apply an
+/// edit. Lives with the model layer so repositories never import UI code.
+class PostDraft {
+  const PostDraft({
+    required this.content,
+    this.withImage = false,
+    this.backgroundId,
+    this.taggedNames = const [],
+    this.location,
+  });
+
+  final String content;
+  final bool withImage;
+  final String? backgroundId;
+  final List<String> taggedNames;
+  final String? location;
 }

@@ -2,6 +2,7 @@ import '../models/admin.dart';
 import '../models/community.dart';
 import '../models/conversation.dart';
 import '../models/enums.dart';
+import '../models/friend_person.dart';
 import '../models/notification_item.dart';
 import '../models/opportunity.dart';
 import '../models/post.dart';
@@ -26,6 +27,94 @@ class MockData {
     'Mathematics', 'Physics', 'Chemistry', 'Biology', 'English',
     'Computer Science', 'Engineering', 'Business Studies', 'Statistics',
     'Research', 'Technical Drawing', 'Geography', 'Study Skills',
+  ];
+
+  /// Fictional classmates offered by the composer's "tag people" sheet.
+  static const List<String> taggableStudents = [
+    'Agness Mbewe', 'Blessings Kalua', 'Frank Banda', 'Kondwani Chirwa',
+    'Lindiwe Zgambo', 'Mary Chasukwa', 'Mphatso Nyirenda', 'Tadala Phiri',
+    'Thoko Kaunda',
+  ];
+
+  /// Malawi places offered by the composer's location sheet.
+  static const List<String> postLocations = [
+    'Lilongwe, Malawi', 'Blantyre, Malawi', 'Zomba, Malawi', 'Mzuzu, Malawi',
+    'Kasungu, Malawi', 'Nkhata Bay, Malawi', 'Kambiri University',
+    'Chichiri Girls Secondary School', 'Lilongwe Institute of Technology',
+  ];
+
+  // ---------------------------------------------------------------------------
+  // Friends (requests, suggestions, current friends)
+  // ---------------------------------------------------------------------------
+
+  /// Incoming friend requests shown on the Friends page.
+  static const List<FriendPerson> incomingFriendRequests = [
+    FriendPerson(
+      id: 'fr1',
+      name: 'Agness Mbewe',
+      institution: 'Kambiri University',
+      subtitle: '3 mutual friends',
+    ),
+    FriendPerson(
+      id: 'fr2',
+      name: 'Frank Banda',
+      institution: 'Blantyre Technical College',
+      subtitle: '1 mutual friend',
+    ),
+    FriendPerson(
+      id: 'fr3',
+      name: 'Lindiwe Zgambo',
+      institution: 'Chichiri Girls Secondary School',
+      subtitle: 'Studied at the same school',
+    ),
+  ];
+
+  /// "People you may know" suggestions.
+  static const List<FriendPerson> suggestedFriends = [
+    FriendPerson(
+      id: 'fs1',
+      name: 'Tadala Phiri',
+      institution: 'Kambiri University',
+      subtitle: '4 mutual friends',
+    ),
+    FriendPerson(
+      id: 'fs2',
+      name: 'Mary Chasukwa',
+      institution: 'Mzuzu City College',
+      subtitle: '2 mutual friends',
+    ),
+    FriendPerson(
+      id: 'fs3',
+      name: 'Blessings Kalua',
+      institution: 'Kasungu University',
+      subtitle: 'In your communities',
+    ),
+    FriendPerson(
+      id: 'fs4',
+      name: 'Kondwani Chirwa',
+      institution: 'Lilongwe Institute of Technology',
+      subtitle: '5 mutual friends',
+    ),
+    FriendPerson(
+      id: 'fs5',
+      name: 'Thoko Kaunda',
+      institution: 'Nkhata Bay Secondary School',
+      subtitle: 'In your communities',
+    ),
+  ];
+
+  /// The student's current friends.
+  static const List<FriendPerson> demoFriends = [
+    FriendPerson(
+      id: 'ff1',
+      name: 'Mphatso Nyirenda',
+      institution: 'Kambiri University',
+    ),
+    FriendPerson(
+      id: 'ff2',
+      name: 'Chikondi Moyo',
+      institution: 'Lilongwe Institute of Technology',
+    ),
   ];
 
   static List<Institution> institutions = [
@@ -391,7 +480,7 @@ class MockData {
       dateAdded: DateTime(2026, 9, 29), status: ResourceStatus.approved,
       downloadCount: 412,
     ),
-    // ---- Admin workflow samples (not visible to students yet) ----
+    // ---- Review-queue samples (hidden from students by status) ----
     LibraryResource(
       id: 'r14', title: 'Statistics Lecture Notes',
       description: 'Descriptive statistics, probability and inference for '
@@ -636,7 +725,7 @@ class MockData {
   ];
 
   // ---------------------------------------------------------------------------
-  // Reports, audit log, notifications
+  // Reports and notifications
   // ---------------------------------------------------------------------------
 
   static List<Report> reports = [
@@ -646,18 +735,6 @@ class MockData {
     Report(id: 'rp4', target: ReportTarget.post, targetId: 'p11', targetTitle: 'Isometric drawing practice set', reason: ModerationReason.spam, reporter: 'Student', timestamp: DateTime(2026, 10, 21, 8, 15)),
     Report(id: 'rp5', target: ReportTarget.user, targetId: 'u10', targetTitle: 'Frank Banda', reason: ModerationReason.harassment, reporter: 'Student', timestamp: DateTime(2026, 10, 12, 17, 45), status: ReportStatus.resolved, notes: 'Account reviewed; warning issued.'),
     Report(id: 'rp6', target: ReportTarget.post, targetId: 'p9', targetTitle: 'Scholarship alert post', reason: ModerationReason.suspiciousOpportunity, reporter: 'Student', timestamp: DateTime(2026, 10, 22, 13, 0)),
-  ];
-
-  static List<AuditEntry> auditLog = [
-    AuditEntry(id: 'a1', adminName: 'Admin', action: 'Approved resource "MSCE Past Papers — Mathematics (2019–2024)"', timestamp: DateTime(2026, 9, 29, 10, 0)),
-    AuditEntry(id: 'a2', adminName: 'Admin', action: 'Rejected resource "Scanned Copy — Unknown Source" (no attribution)', timestamp: DateTime(2026, 10, 15, 9, 30)),
-    AuditEntry(id: 'a3', adminName: 'Admin', action: 'Published announcement "Second semester timetable published"', timestamp: DateTime(2026, 10, 28, 9, 15)),
-    AuditEntry(id: 'a4', adminName: 'Admin', action: 'Verified opportunity "Undergraduate Scholarship Programme 2027"', timestamp: DateTime(2026, 10, 10, 11, 0)),
-    AuditEntry(id: 'a5', adminName: 'Admin', action: 'Dismissed report rp1 as not a violation', timestamp: DateTime(2026, 10, 26, 13, 0)),
-    AuditEntry(id: 'a6', adminName: 'Admin', action: 'Suspended account "Frank Banda"', timestamp: DateTime(2026, 10, 12, 18, 0)),
-    AuditEntry(id: 'a7', adminName: 'Admin', action: 'Restored account "Frank Banda"', timestamp: DateTime(2026, 10, 13, 9, 0)),
-    AuditEntry(id: 'a8', adminName: 'Admin', action: 'Archived resource "Science Fair Pack 2024"', timestamp: DateTime(2026, 8, 2, 15, 0)),
-    AuditEntry(id: 'a9', adminName: 'Admin', action: 'Added institution "Blantyre Technical College"', timestamp: DateTime(2026, 7, 21, 12, 0)),
   ];
 
   static List<AppNotification> notifications = [

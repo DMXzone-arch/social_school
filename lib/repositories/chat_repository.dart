@@ -4,8 +4,8 @@ import '../data/mock_data.dart';
 import '../models/admin.dart';
 import '../models/conversation.dart';
 import '../models/enums.dart';
-import 'admin_repository.dart';
 import 'notification_repository.dart';
+import 'report_repository.dart';
 
 /// Simulated chats with a mutual-approval messaging policy:
 /// a conversation only opens after the recipient accepts the request.
@@ -19,14 +19,6 @@ class ChatRepository extends ChangeNotifier {
   static final ChatRepository instance = ChatRepository._();
 
   final List<Conversation> conversations = List.of(MockData.conversations);
-
-  /// Restores the seeded sample data (admin "Reset demo data").
-  void reseed() {
-    conversations
-      ..clear()
-      ..addAll(MockData.conversations);
-    notifyListeners();
-  }
 
   List<Conversation> get accepted =>
       conversations.where((c) => !c.isRequest && !c.outgoingRequest).toList();
@@ -186,12 +178,12 @@ class ChatRepository extends ChangeNotifier {
     final conversation = byId(id);
     if (conversation == null) return;
     conversation.reported = true;
-    AdminRepository.instance.createReport(
+    ReportRepository.instance.createReport(
       target: ReportTarget.user,
       targetId: conversation.id,
       targetTitle: conversation.peerName,
       reason: reason,
-      reporter: 'Demo Student',
+      reporter: 'Member',
     );
     notifyListeners();
   }

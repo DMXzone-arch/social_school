@@ -24,7 +24,7 @@ class WelcomeView extends StatelessWidget {
           Text(
             AppConstants.description,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.6),
+            style: TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.6),
           ),
           const SizedBox(height: 18),
           Wrap(
@@ -49,7 +49,7 @@ class WelcomeView extends StatelessWidget {
                 onPressed: () => _showPolicyDialog(context, 'Terms of Use'),
                 child: const Text('Terms of Use', style: TextStyle(fontSize: 12.5)),
               ),
-              const Text('·', style: TextStyle(color: AppColors.textSecondary)),
+              Text('·', style: TextStyle(color: AppColors.textSecondary)),
               TextButton(
                 onPressed: () => _showPolicyDialog(context, 'Privacy Policy'),
                 child: const Text('Privacy Policy', style: TextStyle(fontSize: 12.5)),
@@ -71,7 +71,7 @@ class WelcomeView extends StatelessWidget {
           width: 420,
           child: Text(
             'Welcome to Social School. By using the app you agree to our '
-            'commitment to a safe, respectful community for students.\n\n'
+            'commitment to a safe, respectful community for members.\n\n'
             'We protect your privacy, moderate content, and keep your '
             'personal data secure.',
             style: const TextStyle(height: 1.5),

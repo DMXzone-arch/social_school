@@ -102,7 +102,7 @@ Future<PhotoSheetChoice> showProfilePhotoSheet(
 }) async {
   final choice = await showModalBottomSheet<PhotoSheetChoice>(
     context: context,
-    backgroundColor: AppColors.white,
+    backgroundColor: AppColors.surface,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
     ),

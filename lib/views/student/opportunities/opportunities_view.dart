@@ -36,7 +36,7 @@ class OpportunitiesView extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 4),
-              const Text(
+              Text(
                 'Scholarships, internships, competitions and training '
                 'programs updated weekly.',
                 style: TextStyle(fontSize: 12, color: AppColors.textSecondary),

@@ -19,14 +19,6 @@ class CommunityRepository extends ChangeNotifier {
 
   final List<Community> communities = List.of(MockData.communities);
 
-  /// Restores the seeded sample data (admin "Reset demo data").
-  void reseed() {
-    communities
-      ..clear()
-      ..addAll(MockData.communities);
-    notifyListeners();
-  }
-
   Community? byId(String id) {
     for (final community in communities) {
       if (community.id == id) return community;

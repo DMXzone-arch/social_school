@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_controller.dart';
 import 'repositories/auth_repository.dart';
 import 'viewmodels/chat_viewmodel.dart';
 import 'viewmodels/feed_viewmodel.dart';
@@ -17,8 +18,7 @@ import 'views/student/student_shell.dart';
 ///
 /// Routes between the onboarding flow and the student shell based on the
 /// simulated authentication state. The admin application lives in a
-/// separate app (`lib/main_admin.dart` / `lib/admin_app.dart`) and is not
-/// reachable from here.
+/// separate project and is not part of this codebase.
 class SocialSchoolApp extends StatefulWidget {
   const SocialSchoolApp({super.key});
 
@@ -36,12 +36,25 @@ class _SocialSchoolAppState extends State<SocialSchoolApp> {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: AuthRepository.instance,
+      listenable: Listenable.merge([
+        AuthRepository.instance,
+        ThemeController.instance,
+      ]),
       builder: (context, _) {
+        // Keep the adaptive AppColors palette in sync with the active theme
+        // BEFORE the tree (re)builds and reads its semantic colours.
+        final controller = ThemeController.instance;
+        AppColors.setDarkMode(controller.isDarkFor(ThemeController.platformBrightness));
+
         return MaterialApp(
           title: AppConstants.appName,
           debugShowCheckedModeBanner: false,
           theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: controller.mode,
+          // AppColors-driven widgets flip instantly; skip the cross-fade so
+          // the two don't animate out of sync.
+          themeAnimationDuration: Duration.zero,
           home: _buildHome(),
         );
       },

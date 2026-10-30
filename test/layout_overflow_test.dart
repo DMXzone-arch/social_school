@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:social_school/app.dart';
+import 'package:social_school/core/theme/theme_controller.dart';
 import 'package:social_school/repositories/auth_repository.dart';
 import 'package:social_school/views/student/chats/widgets/community_card.dart';
 import 'package:social_school/views/student/chats/widgets/conversation_tile.dart';
@@ -31,6 +32,12 @@ void main() {
         oldOnError?.call(details);
       };
       addTearDown(() => FlutterError.onError = oldOnError);
+      // Reset the global theme singleton so this test can't leak dark mode
+      // into other tests in the same run.
+      addTearDown(() {
+        ThemeController.instance.setDark(false);
+        ThemeController.instance.setMode(ThemeMode.system);
+      });
 
       final unexpected = <String>[];
       final cosmetic = <String>[];
@@ -71,6 +78,13 @@ void main() {
         final scrollables = find.byType(Scrollable);
         if (scrollables.evaluate().isEmpty) return;
         await tester.drag(scrollables.first, const Offset(0, -500));
+        await settle(2);
+      }
+
+      Future<void> scrollUp() async {
+        final scrollables = find.byType(Scrollable);
+        if (scrollables.evaluate().isEmpty) return;
+        await tester.drag(scrollables.first, const Offset(0, 900));
         await settle(2);
       }
 
@@ -128,6 +142,119 @@ void main() {
       await scrollDown();
       await scrollDown();
       collect('feed');
+
+      print('step: create post page');
+      await scrollUp();
+      final composerCard = find.text('Share a study tip, question or update…');
+      if (composerCard.evaluate().isNotEmpty) {
+        await tester.tap(composerCard.first, warnIfMissed: false);
+        await settle(4);
+        collect('create post page');
+        await tester.enterText(find.byType(TextField).first, 'Overflow test post');
+        await settle(2);
+        collect('create post page typed');
+
+        // Background colour picker + selection.
+        final bgButton = find.byTooltip('Background colour');
+        if (bgButton.evaluate().isNotEmpty) {
+          await tester.tap(bgButton.first, warnIfMissed: false);
+          await settle(4);
+          collect('background picker');
+          final oceanTile = find.text('Aa').first;
+          await tester.tap(oceanTile, warnIfMissed: false);
+          await settle(3);
+          collect('background applied');
+        }
+
+        // Tag people dialog + selection.
+        final tagButton = find.byTooltip('Tag people');
+        if (tagButton.evaluate().isNotEmpty) {
+          await tester.tap(tagButton.first, warnIfMissed: false);
+          await settle(4);
+          collect('tag people dialog');
+          final firstPerson = find.byType(CheckboxListTile).first;
+          await tester.tap(firstPerson, warnIfMissed: false);
+          await settle(2);
+          collect('tag people checked');
+          final doneButton = find.text('Done');
+          if (doneButton.evaluate().isNotEmpty) {
+            await tester.tap(doneButton.first, warnIfMissed: false);
+          }
+          await settle(3);
+          collect('tag people applied');
+        }
+
+        // Location dialog + selection.
+        final locationButton = find.byTooltip('Location');
+        if (locationButton.evaluate().isNotEmpty) {
+          await tester.tap(locationButton.first, warnIfMissed: false);
+          await settle(4);
+          collect('location dialog');
+          final firstPlace = find.byType(ListTile).first;
+          await tester.tap(firstPlace, warnIfMissed: false);
+          await settle(3);
+          collect('location applied');
+        }
+
+        final composerClose = find.byTooltip('Close');
+        if (composerClose.evaluate().isNotEmpty) {
+          await tester.tap(composerClose.first, warnIfMissed: false);
+        }
+        await settle(3);
+        collect('back to feed from composer');
+      }
+
+      print('step: friends');
+      await scrollUp();
+      final friendsShortcut = find.text('Friends');
+      if (friendsShortcut.evaluate().isNotEmpty) {
+        await tester.tap(friendsShortcut.first, warnIfMissed: false);
+        await settle(4);
+        print('  -> friends page opened');
+        collect('friends page');
+        // Accept the first incoming request (turns into "Your friends").
+        final addButton = find.widgetWithText(FilledButton, 'Add');
+        if (addButton.evaluate().isNotEmpty) {
+          await tester.tap(addButton.first, warnIfMissed: false);
+          await settle(3);
+          print('  -> accepted request');
+          collect('friend request accepted');
+        }
+        // Send a request to the first suggestion ("Add friend").
+        final addFriendButton = find.widgetWithText(FilledButton, 'Add friend');
+        if (addFriendButton.evaluate().isNotEmpty) {
+          await tester.tap(addFriendButton.first, warnIfMissed: false);
+          await settle(3);
+          print('  -> sent request');
+          collect('friend request sent');
+        }
+        await scrollDown();
+        collect('friends scrolled');
+        await backOrSkip();
+        await settle(3);
+        collect('back to feed from friends');
+      }
+
+      print('step: opportunity stories');
+      await scrollDown();
+      final storyTiles = find.byType(InkWell);
+      if (storyTiles.evaluate().isNotEmpty) {
+        collect('stories visible');
+      }
+
+      print('step: feed search');
+      final searchButton = find.byIcon(Icons.search_rounded);
+      if (searchButton.evaluate().isNotEmpty) {
+        await tester.tap(searchButton.first, warnIfMissed: false);
+        await settle(4);
+        collect('search page');
+        await tester.enterText(find.byType(TextField).first, 'math');
+        await settle(3);
+        collect('search results');
+        await backOrSkip();
+        await settle(3);
+        collect('back to feed');
+      }
 
       print('step: library');
       await tester.tap(find.byIcon(Icons.menu_book_outlined));
@@ -216,6 +343,60 @@ void main() {
           await settle(3);
           await scrollDown();
           collect('settings');
+
+          // Turn on dark mode and sweep a couple of screens in it. The
+          // Appearance section sits below Account, so scroll until the
+          // switch mounts (ListView builds lazily).
+          // Appearance sits near the top; scroll back up first so a single
+          // small drag reveals it without scrolling past.
+          await scrollUp();
+          await scrollUp();
+          await settle(2);
+          Finder darkSwitch = find.widgetWithText(SwitchListTile, 'Dark mode');
+          for (var i = 0; i < 3 && darkSwitch.evaluate().isEmpty; i++) {
+            await scrollDown();
+            darkSwitch = find.widgetWithText(SwitchListTile, 'Dark mode');
+          }
+          if (darkSwitch.evaluate().isNotEmpty) {
+            await tester.tap(darkSwitch.first, warnIfMissed: false);
+            await settle(4);
+            print('  -> dark mode ON');
+            collect('settings dark');
+            await backOrSkip();
+            await settle(4);
+            await scrollDown();
+            collect('feed dark');
+            await tester.tap(find.byIcon(Icons.menu_book_outlined));
+            await settle(4);
+            collect('library dark');
+            await tester.tap(find.byIcon(Icons.person_outline_rounded));
+            await settle(4);
+            collect('profile dark');
+            // Back to settings to switch dark mode off again.
+            if (accountMenu.evaluate().isNotEmpty) {
+              await tester.tap(accountMenu.first, warnIfMissed: false);
+              await settle(3);
+              final settingsAgain = find.widgetWithText(PopupMenuItem<String>, 'Settings');
+              if (settingsAgain.evaluate().isNotEmpty) {
+                await tester.tap(settingsAgain.first, warnIfMissed: false);
+                await settle(3);
+                await scrollUp();
+                await scrollUp();
+                await settle(2);
+                Finder darkSwitchAgain = find.widgetWithText(SwitchListTile, 'Dark mode');
+                for (var i = 0; i < 3 && darkSwitchAgain.evaluate().isEmpty; i++) {
+                  await scrollDown();
+                  darkSwitchAgain = find.widgetWithText(SwitchListTile, 'Dark mode');
+                }
+                if (darkSwitchAgain.evaluate().isNotEmpty) {
+                  await tester.tap(darkSwitchAgain.first, warnIfMissed: false);
+                  await settle(4);
+                  print('  -> dark mode OFF');
+                  collect('settings light again');
+                }
+              }
+            }
+          }
         }
         await backOrSkip();
         await settle(3);

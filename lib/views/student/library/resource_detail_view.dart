@@ -86,7 +86,7 @@ class ResourceDetailView extends StatelessWidget {
                       ),
                       const SizedBox(height: 14),
                       Text(resource.description,
-                          style: const TextStyle(fontSize: 14, height: 1.6, color: AppColors.textPrimary)),
+                          style: TextStyle(fontSize: 14, height: 1.6, color: AppColors.textPrimary)),
                       const Divider(height: 28),
                       InfoRow(icon: Icons.person_outline_rounded, label: 'Author / source', value: resource.author),
                       InfoRow(icon: Icons.school_outlined, label: 'Intended for',
@@ -137,7 +137,7 @@ class ResourceDetailView extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      const Text(
+                      Text(
                         'Download and study this resource offline. Files are '
                         'provided by your school and partner institutions.',
                         style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary, height: 1.5),

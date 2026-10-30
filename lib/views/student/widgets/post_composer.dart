@@ -1,34 +1,44 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
-import '../../../../core/widgets/forms.dart';
+import '../../../../core/widgets/ui_kit.dart';
 import '../../../../models/post.dart';
+import '../../../../models/post_background.dart';
+import '../../../../repositories/auth_repository.dart';
+import 'composer_options.dart';
 
 const int kMaxPostLength = 500;
 
-/// Reusable composer dialog for creating or editing a text post.
+/// Full-screen "Create post" page, Facebook Lite style: your avatar and
+/// name, a large text area (optionally on a colour background) and an
+/// "Add to your post" action bar — photo, background, tag people, location.
 ///
-/// Returns `(content, withImage)` or `null` when cancelled.
-Future<(String, bool)?> showPostComposer(BuildContext context, {Post? existing}) {
-  return showDialog<(String, bool)>(
-    context: context,
-    builder: (_) => _PostComposerDialog(existing: existing),
+/// Also used for editing an existing post. Returns a [PostDraft] or `null`
+/// when closed.
+Future<PostDraft?> showPostComposer(BuildContext context, {Post? existing}) {
+  return Navigator.of(context).push<PostDraft>(
+    MaterialPageRoute(
+      fullscreenDialog: true,
+      builder: (_) => _PostComposerPage(existing: existing),
+    ),
   );
 }
 
-class _PostComposerDialog extends StatefulWidget {
-  const _PostComposerDialog({this.existing});
+class _PostComposerPage extends StatefulWidget {
+  const _PostComposerPage({this.existing});
 
   final Post? existing;
 
   @override
-  State<_PostComposerDialog> createState() => _PostComposerDialogState();
+  State<_PostComposerPage> createState() => _PostComposerPageState();
 }
 
-class _PostComposerDialogState extends State<_PostComposerDialog> {
+class _PostComposerPageState extends State<_PostComposerPage> {
   late final TextEditingController _controller;
   bool _withImage = false;
-  bool _submitting = false;
+  String? _backgroundId;
+  List<String> _tagged = const [];
+  String? _location;
   String? _error;
 
   @override
@@ -36,6 +46,9 @@ class _PostComposerDialogState extends State<_PostComposerDialog> {
     super.initState();
     _controller = TextEditingController(text: widget.existing?.content ?? '');
     _withImage = widget.existing?.hasImage ?? false;
+    _backgroundId = widget.existing?.backgroundId;
+    _tagged = List.of(widget.existing?.taggedNames ?? const []);
+    _location = widget.existing?.location;
   }
 
   @override
@@ -43,6 +56,8 @@ class _PostComposerDialogState extends State<_PostComposerDialog> {
     _controller.dispose();
     super.dispose();
   }
+
+  bool get _isEdit => widget.existing != null;
 
   void _submit() {
     final text = _controller.text.trim();
@@ -54,122 +69,189 @@ class _PostComposerDialogState extends State<_PostComposerDialog> {
       setState(() => _error = 'Posts are limited to $kMaxPostLength characters.');
       return;
     }
-    setState(() => _submitting = true);
-    Navigator.of(context).pop((text, _withImage));
+    Navigator.of(context).pop(PostDraft(
+      content: text,
+      withImage: _withImage,
+      backgroundId: _backgroundId,
+      taggedNames: _tagged,
+      location: _location,
+    ));
   }
 
   @override
   Widget build(BuildContext context) {
-    final isEdit = widget.existing != null;
+    final me = AuthRepository.instance.currentUser;
     final remaining = kMaxPostLength - _controller.text.length;
+    final background = PostBackground.byId(_backgroundId);
 
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: Text(isEdit ? 'Edit post' : 'Create post',
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-      content: SizedBox(
-        width: 480,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: _controller,
-              autofocus: true,
-              maxLines: 5,
-              minLines: 3,
-              onChanged: (_) => setState(() => _error = null),
-              decoration: const InputDecoration(
-                hintText: 'Share a study tip, question or update…',
-                filled: true,
-                fillColor: AppColors.background,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide(color: AppColors.border),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide(color: AppColors.border),
-                ),
+    return Scaffold(
+      backgroundColor: AppColors.surface,
+      appBar: AppBar(
+        backgroundColor: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
+        leading: IconButton(
+          tooltip: 'Close',
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.close_rounded),
+        ),
+        title: Text(
+          _isEdit ? 'Edit post' : 'Create post',
+          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(0, 38),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
+              onPressed: _submit,
+              child: Text(_isEdit ? 'SAVE' : 'POST'),
             ),
-            const SizedBox(height: 8),
-            Row(
+          ),
+        ],
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Author + tagged / location line -----------------------------
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Row(
               children: [
-                Flexible(
-                  child: Text(
-                    '$remaining characters left',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      color: remaining < 0 ? AppColors.error : AppColors.textSecondary,
-                    ),
+                AvatarCircle(name: me?.fullName ?? 'Member', radius: 22),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        me?.fullName ?? 'Member',
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                      ),
+                      if (_tagged.isNotEmpty || _location != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            [
+                              if (_tagged.isNotEmpty)
+                                '— with ${_tagged.map((n) => n.split(' ').first).join(', ')}',
+                              ?_location,
+                            ].join('  ·  '),
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                                fontSize: 12, color: AppColors.textSecondary),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 8),
-                if (!isEdit)
-                  TextButton.icon(
-                    style: TextButton.styleFrom(
-                      visualDensity: VisualDensity.compact,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                    ),
-                    onPressed: () => setState(() => _withImage = !_withImage),
-                    icon: Icon(
-                      _withImage ? Icons.check_box_rounded : Icons.image_outlined,
-                      size: 18,
-                      color: _withImage ? AppColors.teal : AppColors.textSecondary,
-                    ),
-                    label: Text(
-                      _withImage ? 'Image attached' : 'Attach image',
-                      maxLines: 1,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        color: _withImage ? AppColors.teal : AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
               ],
             ),
-            if (_withImage)
-              Container(
-                margin: const EdgeInsets.only(top: 6),
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.teal.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.photo_library_outlined, size: 16, color: AppColors.teal),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Tap to add a photo from your gallery.',
-                        style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
+          ),
+
+          // Text area (on the chosen background when one is set) ---------
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: background == null
+                  ? _textField()
+                  : Container(
+                      decoration: BoxDecoration(
+                        gradient: background.gradient,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      padding: const EdgeInsets.all(16),
+                      child: _textField(
+                        style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            height: 1.4,
+                            color: Colors.white),
+                        hintColor: Colors.white70,
+                        textAlign: TextAlign.center,
                       ),
                     ),
-                  ],
-                ),
-              ),
-            if (_error != null) ...[
-              const SizedBox(height: 8),
-              Text(_error!, style: const TextStyle(color: AppColors.error, fontSize: 12.5)),
-            ],
-          ],
-        ),
+            ),
+          ),
+
+          if (_error != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child:
+                  Text(_error!, style: const TextStyle(color: AppColors.error, fontSize: 12.5)),
+            ),
+
+          // "Add to your post" bar ---------------------------------------
+          Divider(height: 1, color: AppColors.border),
+          ComposerAddBar(
+            remaining: remaining,
+            showPhoto: !_isEdit,
+            photoActive: _withImage,
+            backgroundActive: _backgroundId != null,
+            tagActive: _tagged.isNotEmpty,
+            locationActive: _location != null,
+            onPhoto: () => setState(() => _withImage = !_withImage),
+            onBackground: _pickBackground,
+            onTagPeople: _pickPeople,
+            onLocation: _pickLocation,
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: _submitting ? null : () => Navigator.pop(context),
-          child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
-        ),
-        AppButton(
-          label: isEdit ? 'Save changes' : 'Post',
-          expanded: false,
-          onPressed: _submit,
-        ),
-      ],
     );
+  }
+
+  Widget _textField({
+    TextStyle? style,
+    Color? hintColor,
+    TextAlign textAlign = TextAlign.start,
+  }) {
+    return TextField(
+      controller: _controller,
+      autofocus: true,
+      maxLines: null,
+      minLines: 6,
+      keyboardType: TextInputType.multiline,
+      textCapitalization: TextCapitalization.sentences,
+      textAlign: textAlign,
+      onChanged: (_) => setState(() => _error = null),
+      style: style ?? const TextStyle(fontSize: 16.5, height: 1.5),
+      cursorColor: _backgroundId != null ? Colors.white : AppColors.primary,
+      decoration: InputDecoration(
+        hintText: _isEdit ? 'Edit your post…' : 'Share a study tip, question or update…',
+        hintStyle: TextStyle(
+          color: hintColor ?? AppColors.textSecondary,
+          fontSize: style != null ? 20 : 16.5,
+          fontWeight: style != null ? FontWeight.w800 : FontWeight.w400,
+          height: 1.5,
+        ),
+        border: InputBorder.none,
+        enabledBorder: InputBorder.none,
+        focusedBorder: InputBorder.none,
+        filled: false,
+        contentPadding: EdgeInsets.zero,
+      ),
+    );
+  }
+
+  Future<void> _pickBackground() async {
+    final id = await showBackgroundPicker(context);
+    if (id != null && mounted) setState(() => _backgroundId = id);
+  }
+
+  Future<void> _pickPeople() async {
+    final picked = await showTagPeopleDialog(context, selected: _tagged);
+    if (picked != null && mounted) setState(() => _tagged = picked);
+  }
+
+  Future<void> _pickLocation() async {
+    final place = await showLocationDialog(context);
+    if (place != null && mounted) setState(() => _location = place);
   }
 }

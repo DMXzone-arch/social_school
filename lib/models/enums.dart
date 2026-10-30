@@ -26,12 +26,10 @@ String genderLabel(Gender gender) => switch (gender) {
 enum PostType { studentPost, schoolAnnouncement, adminAnnouncement }
 
 String postTypeLabel(PostType type) => switch (type) {
-      PostType.studentPost => 'Student post',
+      PostType.studentPost => 'Member post',
       PostType.schoolAnnouncement => 'School announcement',
       PostType.adminAnnouncement => 'Admin announcement',
     };
-
-enum FeedFilter { forYou, myInstitution, following }
 
 enum ResourceCategory {
   textbooks,
@@ -101,27 +99,7 @@ String moderationReasonLabel(ModerationReason reason) => switch (reason) {
 
 enum ReportTarget { post, resource, opportunity, user }
 
-String reportTargetLabel(ReportTarget target) => switch (target) {
-      ReportTarget.post => 'Post',
-      ReportTarget.resource => 'Resource',
-      ReportTarget.opportunity => 'Opportunity',
-      ReportTarget.user => 'Account',
-    };
-
 enum ReportStatus { open, resolved, dismissed }
-
-String reportStatusLabel(ReportStatus status) => switch (status) {
-      ReportStatus.open => 'Open',
-      ReportStatus.resolved => 'Resolved',
-      ReportStatus.dismissed => 'Dismissed',
-    };
-
-enum AccountStatus { active, suspended }
-
-String accountStatusLabel(AccountStatus status) => switch (status) {
-      AccountStatus.active => 'Active',
-      AccountStatus.suspended => 'Suspended',
-    };
 
 enum InstitutionType { secondary, college, university }
 

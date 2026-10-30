@@ -15,14 +15,6 @@ class NotificationRepository extends ChangeNotifier {
 
   final List<AppNotification> items = List.of(MockData.notifications);
 
-  /// Restores the seeded sample data (admin "Reset demo data").
-  void reseed() {
-    items
-      ..clear()
-      ..addAll(MockData.notifications);
-    notifyListeners();
-  }
-
   int get unreadCount => items.where((item) => !item.read).length;
 
   void add({

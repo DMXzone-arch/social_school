@@ -108,7 +108,7 @@ class OpportunityDetailView extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(o.provider,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                         fontSize: 13.5, color: AppColors.textSecondary)),
                               ],
                             ),

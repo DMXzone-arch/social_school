@@ -7,7 +7,7 @@ import '../../../../repositories/library_repository.dart';
 
 /// Reusable download control that reflects the simulated download state
 /// (idle → downloading with progress → downloaded / failed with retry).
-/// Used by resource cards, the resource detail screen and admin previews.
+/// Used by resource cards and the resource detail screen.
 class DownloadButton extends StatelessWidget {
   const DownloadButton({
     required this.resource,

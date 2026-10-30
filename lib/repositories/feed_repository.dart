@@ -33,16 +33,6 @@ class FeedRepository extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Restores the seeded sample data (admin "Reset demo data").
-  void reseed() {
-    posts
-      ..clear()
-      ..addAll(MockData.posts);
-    loaded = false;
-    loading = false;
-    notifyListeners();
-  }
-
   Post? byId(String id) {
     for (final post in posts) {
       if (post.id == id) return post;
@@ -51,7 +41,7 @@ class FeedRepository extends ChangeNotifier {
   }
 
   /// Creates a post for the signed-in student.
-  Future<void> createPost(StudentProfile author, String content, {bool withImage = false}) async {
+  Future<void> createPost(StudentProfile author, PostDraft draft) async {
     await Future<void>.delayed(const Duration(milliseconds: 250));
     posts.insert(
       0,
@@ -59,20 +49,28 @@ class FeedRepository extends ChangeNotifier {
         id: 'p${DateTime.now().millisecondsSinceEpoch}',
         authorId: author.id,
         authorName: author.fullName,
-        authorInstitution: author.institution.isEmpty ? 'Student' : author.institution,
+        authorInstitution: author.institution.isEmpty ? 'Member' : author.institution,
         type: PostType.studentPost,
-        content: content.trim(),
+        content: draft.content.trim(),
         timestamp: DateTime.now(),
-        hasImage: withImage,
+        hasImage: draft.withImage,
+        backgroundId: draft.backgroundId,
+        taggedNames: List.of(draft.taggedNames),
+        location: draft.location,
       ),
     );
     notifyListeners();
   }
 
-  Future<void> editPost(String id, String content) async {
+  Future<void> editPost(String id, PostDraft draft) async {
     await Future<void>.delayed(const Duration(milliseconds: 200));
     final post = byId(id);
-    if (post != null) post.content = content.trim();
+    if (post != null) {
+      post.content = draft.content.trim();
+      post.backgroundId = draft.backgroundId;
+      post.taggedNames = List.of(draft.taggedNames);
+      post.location = draft.location;
+    }
     notifyListeners();
   }
 
@@ -110,56 +108,12 @@ class FeedRepository extends ChangeNotifier {
     notifyListeners();
   }
 
-  // --- Admin actions -------------------------------------------------------
-
-  /// Publishes an admin announcement (admin app → student feed).
-  Future<void> publishAnnouncement(String title, String body) async {
-    await Future<void>.delayed(const Duration(milliseconds: 250));
-    posts.insert(
-      0,
-      Post(
-        id: 'p${DateTime.now().millisecondsSinceEpoch}',
-        authorId: null,
-        authorName: 'Social School Admin',
-        authorInstitution: 'Social School',
-        type: PostType.adminAnnouncement,
-        title: title.trim(),
-        content: body.trim(),
-        timestamp: DateTime.now(),
-      ),
-    );
-    notifyListeners();
-  }
-
-  void adminRemovePost(String id) {
-    final post = byId(id);
-    if (post != null) post.removedByAdmin = true;
-    notifyListeners();
-  }
-
-  void adminRestorePost(String id) {
-    final post = byId(id);
-    if (post != null) post.removedByAdmin = false;
-    notifyListeners();
-  }
-
-  /// Feed content for the given filter + search query.
-  List<Post> filtered({
-    required StudentProfile me,
-    FeedFilter filter = FeedFilter.forYou,
-    String query = '',
-  }) {
+  /// Feed content for the given search query (the feed itself shows every
+  /// post, newest first — no filters).
+  List<Post> filtered({String query = ''}) {
     final normalized = query.trim().toLowerCase();
     return posts.where((post) {
       if (post.removedByAdmin) return false;
-
-      final matchesSwitch = switch (filter) {
-        FeedFilter.forYou => true,
-        FeedFilter.myInstitution =>
-          post.authorInstitution == me.institution || post.type == PostType.adminAnnouncement,
-        FeedFilter.following => post.authorId != null && _following.contains(post.authorId),
-      };
-      if (!matchesSwitch) return false;
 
       if (normalized.isEmpty) return true;
       return post.content.toLowerCase().contains(normalized) ||
@@ -167,7 +121,4 @@ class FeedRepository extends ChangeNotifier {
           (post.title?.toLowerCase().contains(normalized) ?? false);
     }).toList();
   }
-
-  /// Demo "following" list for the signed-in student.
-  static const Set<String> _following = {'u2', 'u3', 'u7'};
 }

@@ -94,7 +94,7 @@ class _CommunityDetailViewState extends State<CommunityDetailView> {
                                         color: AppColors.primary),
                                     const SizedBox(width: 6),
                                     Text('${community.memberCount} members',
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                             fontSize: 12, color: AppColors.textSecondary)),
                                   ],
                                 ),
@@ -105,7 +105,7 @@ class _CommunityDetailViewState extends State<CommunityDetailView> {
                       ),
                       const SizedBox(height: 12),
                       Text(community.description,
-                          style: const TextStyle(fontSize: 13.5, height: 1.5, color: AppColors.textPrimary)),
+                          style: TextStyle(fontSize: 13.5, height: 1.5, color: AppColors.textPrimary)),
                       const SizedBox(height: 14),
                       Row(
                         children: [
@@ -198,7 +198,7 @@ class _CommunityDetailViewState extends State<CommunityDetailView> {
                                           style: const TextStyle(
                                               fontWeight: FontWeight.w700, fontSize: 13)),
                                       Text(timeAgo(post.timestamp),
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                               fontSize: 11, color: AppColors.textSecondary)),
                                     ],
                                   ),

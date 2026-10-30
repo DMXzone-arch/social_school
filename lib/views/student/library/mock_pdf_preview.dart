@@ -95,14 +95,14 @@ class _PdfPage extends StatelessWidget {
                     style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
               ),
               Text('Page $pageNumber of $total',
-                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                  style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
             ],
           ),
           const Divider(height: 24),
           Text(
             '${resource.subject} · ${educationLevelLabel(resource.level)} · '
             'Source: ${resource.author}',
-            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
           ),
           const SizedBox(height: 12),
           Text(_sampleBody(pageNumber), style: const TextStyle(height: 1.6, fontSize: 13.5)),
@@ -113,7 +113,7 @@ class _PdfPage extends StatelessWidget {
 
   String _sampleBody(int page) => switch (page) {
         1 =>
-          'Welcome, student! Here is the first page of '
+          'Welcome, member! Here is the first page of '
               '"${resource.title}".\n\n${resource.description}',
         2 =>
               'Continue reading for the full ${resource.fileType} '

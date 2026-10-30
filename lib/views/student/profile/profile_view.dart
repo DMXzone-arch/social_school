@@ -74,7 +74,7 @@ class ProfileView extends StatelessWidget {
                       '${educationLevelLabel(me.educationLevel)} · '
                       '${me.institution.isEmpty ? 'Institution not set' : me.institution}',
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 13, color: AppColors.textSecondary, height: 1.4),
                     ),
                     if (me.bio.isNotEmpty) ...[
@@ -264,13 +264,13 @@ class _ProfileActionRow extends StatelessWidget {
                 ),
                 child: Text(
                   '$count',
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
                 ),
               ),
               const SizedBox(width: 8),
             ],
-            const Icon(Icons.chevron_right_rounded, size: 22, color: AppColors.textSecondary),
+            Icon(Icons.chevron_right_rounded, size: 22, color: AppColors.textSecondary),
           ],
         ),
       ),

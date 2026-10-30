@@ -12,22 +12,20 @@ import '../models/notification_item.dart';
 import '../models/opportunity.dart';
 import '../models/post.dart';
 import '../models/resource.dart';
-import '../repositories/admin_repository.dart';
 import '../repositories/chat_repository.dart';
 import '../repositories/community_repository.dart';
 import '../repositories/feed_repository.dart';
 import '../repositories/library_repository.dart';
 import '../repositories/notification_repository.dart';
 import '../repositories/opportunity_repository.dart';
+import '../repositories/report_repository.dart';
 
 /// Persists the simulated demo state to local storage (browser localStorage
-/// on web) so the **separate** student app and admin app can see each
-/// other's changes.
+/// on web) so prototype changes survive a relaunch.
 ///
 /// PROTOTYPE BEHAVIOUR — clearly labelled:
 /// - Nothing is sent to a server; the data lives only in this device/browser.
 /// - State is saved a moment after each change and restored on app start.
-/// - Use "Reset demo data" (admin → Storage & Settings) to reseed everything.
 ///
 /// FUTURE BACKEND INTEGRATION POINT: this whole class disappears once
 /// Supabase (data) + Cloudflare R2 (files) are connected — repositories will
@@ -75,7 +73,7 @@ class DemoStateStore {
       CommunityRepository.instance,
       OpportunityRepository.instance,
       NotificationRepository.instance,
-      AdminRepository.instance,
+      ReportRepository.instance,
     ];
     for (final repo in repos) {
       repo.addListener(scheduleSave);
@@ -96,18 +94,6 @@ class DemoStateStore {
     }
   }
 
-  /// Clears the snapshot and reseeds repositories from [MockData].
-  void resetDemoData() {
-    _prefs?.remove(_storageKey);
-    FeedRepository.instance.reseed();
-    LibraryRepository.instance.reseed();
-    ChatRepository.instance.reseed();
-    CommunityRepository.instance.reseed();
-    OpportunityRepository.instance.reseed();
-    NotificationRepository.instance.reseed();
-    AdminRepository.instance.reseed();
-  }
-
   // -------------------------------------------------------------------------
   // Serialization
   // -------------------------------------------------------------------------
@@ -119,10 +105,7 @@ class DemoStateStore {
         'communities': CommunityRepository.instance.communities.map(_communityToMap).toList(),
         'opportunities': OpportunityRepository.instance.opportunities.map(_opportunityToMap).toList(),
         'notifications': NotificationRepository.instance.items.map(_notificationToMap).toList(),
-        'reports': AdminRepository.instance.reports.map(_reportToMap).toList(),
-        'auditLog': AdminRepository.instance.auditLog.map(_auditToMap).toList(),
-        'users': AdminRepository.instance.users.map(_userToMap).toList(),
-        'institutions': AdminRepository.instance.institutions.map(_institutionToMap).toList(),
+        'reports': ReportRepository.instance.reports.map(_reportToMap).toList(),
       };
 
   void _apply(Map<String, dynamic> data) {
@@ -132,10 +115,7 @@ class DemoStateStore {
     _replace(CommunityRepository.instance.communities, data['communities'], _communityFromMap);
     _replace(OpportunityRepository.instance.opportunities, data['opportunities'], _opportunityFromMap);
     _replace(NotificationRepository.instance.items, data['notifications'], _notificationFromMap);
-    _replace(AdminRepository.instance.reports, data['reports'], _reportFromMap);
-    _replace(AdminRepository.instance.auditLog, data['auditLog'], _auditFromMap);
-    _replace(AdminRepository.instance.users, data['users'], _userFromMap);
-    _replace(AdminRepository.instance.institutions, data['institutions'], _institutionFromMap);
+    _replace(ReportRepository.instance.reports, data['reports'], _reportFromMap);
   }
 
   static void _replace<T>(List<T> target, dynamic raw, T Function(Map<String, dynamic>) fromMap) {
@@ -407,7 +387,7 @@ class DemoStateStore {
         read: m['read'] as bool? ?? false,
       );
 
-  // --- admin: reports, audit, users, institutions ---------------------------
+  // --- reports -------------------------------------------------------------
 
   static Map<String, dynamic> _reportToMap(Report r) => {
         'id': r.id,
@@ -434,58 +414,5 @@ class DemoStateStore {
         status: _enumByName(ReportStatus.values, m['status'] as String?,
             fallback: ReportStatus.open),
         notes: m['notes'] as String? ?? '',
-      );
-
-  static Map<String, dynamic> _auditToMap(AuditEntry a) => {
-        'id': a.id,
-        'adminName': a.adminName,
-        'action': a.action,
-        'timestamp': a.timestamp.toIso8601String(),
-      };
-
-  static AuditEntry _auditFromMap(Map<String, dynamic> m) => AuditEntry(
-        id: m['id'] as String,
-        adminName: m['adminName'] as String,
-        action: m['action'] as String,
-        timestamp: DateTime.parse(m['timestamp'] as String),
-      );
-
-  static Map<String, dynamic> _userToMap(DemoStudentAccount u) => {
-        'id': u.id,
-        'fullName': u.fullName,
-        'email': u.email,
-        'level': _enumName(u.level),
-        'institution': u.institution,
-        'registered': u.registered.toIso8601String(),
-        'status': _enumName(u.status),
-      };
-
-  static DemoStudentAccount _userFromMap(Map<String, dynamic> m) => DemoStudentAccount(
-        id: m['id'] as String,
-        fullName: m['fullName'] as String,
-        email: m['email'] as String,
-        level: _enumByName(EducationLevel.values, m['level'] as String?,
-            fallback: EducationLevel.secondary),
-        institution: m['institution'] as String,
-        registered: DateTime.parse(m['registered'] as String),
-        status: _enumByName(AccountStatus.values, m['status'] as String?,
-            fallback: AccountStatus.active),
-      );
-
-  static Map<String, dynamic> _institutionToMap(Institution i) => {
-        'id': i.id,
-        'name': i.name,
-        'type': _enumName(i.type),
-        'location': i.location,
-        'programmes': i.programmes,
-      };
-
-  static Institution _institutionFromMap(Map<String, dynamic> m) => Institution(
-        id: m['id'] as String,
-        name: m['name'] as String,
-        type: _enumByName(InstitutionType.values, m['type'] as String?,
-            fallback: InstitutionType.secondary),
-        location: m['location'] as String,
-        programmes: (m['programmes'] as List? ?? const []).cast<String>(),
       );
 }

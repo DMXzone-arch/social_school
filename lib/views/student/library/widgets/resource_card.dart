@@ -62,7 +62,7 @@ class ResourceCard extends StatelessWidget {
             '${resource.fileType} · ${resource.fileSize} · ${formatDate(resource.dateAdded)}',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+            style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
           ),
           const SizedBox(height: 8),
           Row(
@@ -70,7 +70,7 @@ class ResourceCard extends StatelessWidget {
               Expanded(child: DownloadButton(resource: resource)),
               const SizedBox(width: 6),
               Text('${resource.downloadCount} ⬇',
-                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                  style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
             ],
           ),
         ],
@@ -101,7 +101,7 @@ class ResourceCard extends StatelessWidget {
                   '${resource.fileType} · ${resource.fileSize}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                 ),
                 const SizedBox(height: 8),
                 Row(

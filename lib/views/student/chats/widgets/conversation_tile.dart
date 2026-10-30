@@ -75,7 +75,7 @@ class ConversationTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(timeAgo(c.lastTimestamp),
-                      style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                      style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
                   const SizedBox(height: 4),
                   if (hasUnread)
                     Container(

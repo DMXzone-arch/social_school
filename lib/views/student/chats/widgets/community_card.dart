@@ -52,7 +52,7 @@ class CommunityCard extends StatelessWidget {
           Text(c.description,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 12.5, color: AppColors.textSecondary, height: 1.4)),
+              style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary, height: 1.4)),
           const SizedBox(height: 10),
           Row(
             children: [
@@ -80,7 +80,7 @@ class CommunityCard extends StatelessWidget {
                         '${c.memberCount} members',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
+                        style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
                       ),
                     ),
                   ],

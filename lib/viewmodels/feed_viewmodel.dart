@@ -6,8 +6,8 @@ import '../models/student_profile.dart';
 import '../repositories/auth_repository.dart';
 import '../repositories/feed_repository.dart';
 
-/// ViewModel for the student home feed: holds filter/search state and
-/// delegates data work to [FeedRepository].
+/// ViewModel for the home feed: holds search state and delegates data work
+/// to [FeedRepository].
 class FeedViewModel extends ChangeNotifier {
   FeedViewModel() {
     FeedRepository.instance.addListener(notifyListeners);
@@ -17,20 +17,13 @@ class FeedViewModel extends ChangeNotifier {
   final FeedRepository _repo = FeedRepository.instance;
   final AuthRepository _auth = AuthRepository.instance;
 
-  FeedFilter _filter = FeedFilter.forYou;
   String _query = '';
 
-  FeedFilter get filter => _filter;
   String get query => _query;
   bool get loading => _repo.loading;
   bool get loaded => _repo.loaded;
 
   StudentProfile get _me => _auth.currentUser ?? _demoProfile;
-
-  void setFilter(FeedFilter filter) {
-    _filter = filter;
-    notifyListeners();
-  }
 
   void setQuery(String query) {
     _query = query;
@@ -44,13 +37,11 @@ class FeedViewModel extends ChangeNotifier {
     await _repo.load();
   }
 
-  List<Post> get visiblePosts =>
-      _repo.filtered(me: _me, filter: _filter, query: _query);
+  List<Post> get visiblePosts => _repo.filtered(query: _query);
 
   // Convenience actions used by the view layer.
-  Future<void> createPost(String content, {bool withImage = false}) =>
-      _repo.createPost(_me, content, withImage: withImage);
-  Future<void> editPost(String id, String content) => _repo.editPost(id, content);
+  Future<void> createPost(PostDraft draft) => _repo.createPost(_me, draft);
+  Future<void> editPost(String id, PostDraft draft) => _repo.editPost(id, draft);
   void deletePost(String id) => _repo.deletePost(id);
   void toggleLike(String id) => _repo.toggleLike(id);
   Future<void> addComment(String id, String text) => _repo.addComment(id, _me, text);
@@ -58,7 +49,7 @@ class FeedViewModel extends ChangeNotifier {
 
   static final StudentProfile _demoProfile = StudentProfile(
     id: 'me',
-    fullName: 'Student',
+    fullName: 'Member',
     email: '',
     educationLevel: EducationLevel.university,
     country: 'Malawi',

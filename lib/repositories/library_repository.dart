@@ -21,19 +21,7 @@ class LibraryRepository extends ChangeNotifier {
   final List<LibraryResource> resources = List.of(MockData.resources);
   final Map<String, Timer> _downloadTimers = {};
 
-  /// Restores the seeded sample data (admin "Reset demo data").
-  void reseed() {
-    for (final timer in _downloadTimers.values) {
-      timer.cancel();
-    }
-    _downloadTimers.clear();
-    resources
-      ..clear()
-      ..addAll(MockData.resources);
-    notifyListeners();
-  }
-
-  /// Resources visible to students (approved only).
+  /// Resources visible to members (approved only).
   List<LibraryResource> get studentVisible => resources
       .where((resource) => resource.status == ResourceStatus.approved)
       .toList();
@@ -130,60 +118,6 @@ class LibraryRepository extends ChangeNotifier {
     if (resource == null) return;
     resource.downloadState = DownloadState.none;
     resource.downloadProgress = 0;
-    notifyListeners();
-  }
-
-  // --- Admin actions -------------------------------------------------------
-
-  /// Submits a new resource for review (admin upload form).
-  Future<void> submitForReview(LibraryResource resource) async {
-    await Future<void>.delayed(const Duration(milliseconds: 400));
-    resources.insert(0, resource);
-    notifyListeners();
-  }
-
-  void approve(String id) {
-    final resource = byId(id);
-    if (resource == null) return;
-    resource.status = ResourceStatus.approved;
-    resource.rejectionReason = null;
-    notifyListeners();
-  }
-
-  void reject(String id, String reason) {
-    final resource = byId(id);
-    if (resource == null) return;
-    resource.status = ResourceStatus.rejected;
-    resource.rejectionReason = reason;
-    notifyListeners();
-  }
-
-  void archive(String id) {
-    final resource = byId(id);
-    if (resource == null) return;
-    resource.status = ResourceStatus.archived;
-    notifyListeners();
-  }
-
-  void restore(String id) {
-    final resource = byId(id);
-    if (resource == null) return;
-    resource.status = ResourceStatus.approved;
-    resource.rejectionReason = null;
-    notifyListeners();
-  }
-
-  void remove(String id) {
-    resources.removeWhere((resource) => resource.id == id);
-    notifyListeners();
-  }
-
-  void updateMetadata(String id, {String? title, String? subject, String? description}) {
-    final resource = byId(id);
-    if (resource == null) return;
-    if (title != null && title.trim().isNotEmpty) resource.title = title.trim();
-    if (subject != null && subject.trim().isNotEmpty) resource.subject = subject.trim();
-    if (description != null) resource.description = description.trim();
     notifyListeners();
   }
 }
